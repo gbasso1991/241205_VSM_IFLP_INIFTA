@@ -1,15 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+#%%!/usr/bin/env python3
 """
 Created on Fri May 17 14:17:59 2024
-
-@author: pedro
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Oct 19 11:16:00 2021
 
 @author: pedro
 """
@@ -21,65 +12,37 @@ sys.path.append('/media/pedro/Datos/py')
 from mlognormfit import fit3
 from mvshtools import mvshtools as mt
 from uncertainties import ufloat
+#%% Se habre del archivo con el ciclo. 
+# El VSM Lakeshore tiene 12 lineas de encabezado
+os.chdir('/home/giuliano/Documentos/Doctorado/Datos_ESAR_24/241205_VSM_IFLP_INIFTA')
 
-
-#Se habre del archivo con el ciclo. El VSM Lakeshore tiene 12 lineas de encabezado
-os.chdir('/media/pedro/Datos/2_COLABORACIONES/Marcelo/octubre2024')
-
-# nombre_archivo       =['1b.txt','2b1.txt','4b2.txt','5b.txt','7b1.txt','9b1.txt','10b.txt','11b1.txt','13b.txt','15b.txt']
-# masasachet   = np.array([564, 677,528,608,618,561,672,680,594,633,580])*10**-4  #g
-# masasachetNP = np.array([900,861,868,809,925,850])*10**-4  #g
-# masaFF=masasachetNP-masasachet
-# concentracion_MNP    =[0.082, 0.4, 0.20, 0.36, 0.28, 0.22, 0.054, 0.17, 0.14, 0.030] #mg/ml
-# err_conentracion_MNP =[0.009, 0.1, 0.02, 0.05, 0.03, 0.04, 0.008, 0.06, 0.03, 0.005] #mg/ml
 colores = ['blue', 'green', 'red', 'black', 'magenta', 'orange', 'cyan', 'brown', 'purple', 'lime']
 
 # Definir la clase Muestra
 class Muestra:
-    def __init__(self, nombre_archivo, tubo, masa_sachet, masa_sachetNP, concentracion_MNP, err_concentracion_MNP):
+    def __init__(self, nombre_archivo, masa_sachet, masa_sachetNP, concentracion_MNP, err_concentracion_MNP):
         self.nombre_archivo = nombre_archivo
-        self.tubo = tubo
-        self.masa_sachet = masa_sachet
-        self.masa_sachetNP = masa_sachetNP
-        self.concentracion_MNP = concentracion_MNP
-        self.err_concentracion_MNP = err_concentracion_MNP
-
+        self.masa_sachet = masa_sachet  #g
+        self.masa_sachetNP = masa_sachetNP  #g
+        self.concentracion_MNP = concentracion_MNP  #mg/ml
+        self.err_concentracion_MNP = err_concentracion_MNP  #mg/ml
+#%%
 # Crear una lista vacía para almacenar las muestras
 muestras = []
 
-
 # Agregar muestras manualmente (sin vectores previos)
-muestras.append(Muestra('1b.txt'  , 1, 564, 819, 0.082, 0.009)) 
-muestras.append(Muestra('2b1.txt' , 2, 677, 900, 0.4  , 0.1  )) 
-muestras.append(Muestra('4b2.txt' , 4, 528, 783, 0.20 , 0.02 ))
-muestras.append(Muestra('5b.txt'  , 5, 608, 861, 0.36 , 0.05 ))
-muestras.append(Muestra('7b1.txt' , 7, 618, 868, 0.28 , 0.03 ))
-muestras.append(Muestra('9b1.txt' , 9, 561, 809, 0.22 , 0.04 ))
-muestras.append(Muestra('10b.txt' ,10, 680, 938, 0.054, 0.008))
-muestras.append(Muestra('11b1.txt',11, 672, 925, 0.17 , 0.06 ))
-#muestras.append(Muestra('13b.txt' ,13, 594, 850, 0.14 , 0.03 ))
-#muestras.append(Muestra('15b.txt' ,15, 580, 837, 0.030, 0.005))
-
-
-# Agrega las demás muestras siguiendo el mismo formato
-# muestras.append(Muestra(...))
+muestras.append(Muestra('LB100_CP2.txt', 469, 961, 1, 0.01)) 
+muestras.append(Muestra('LB100_FP.txt', 603, 1093, 0.85  , 0.01  )) 
 
 # Crear vectores a partir de los objetos en la lista
 nombre_archivo  = [muestra.nombre_archivo                 for muestra in muestras]
-tubo            = np.array([muestra.tubo                  for muestra in muestras])
 masasachet      = np.array([muestra.masa_sachet           for muestra in muestras])*10**-4
 masasachetNP    = np.array([muestra.masa_sachetNP         for muestra in muestras])*10**-4
 concentracion_MNP = np.array([muestra.concentracion_MNP   for muestra in muestras])
 errores         = np.array([muestra.err_concentracion_MNP for muestra in muestras])
 masaFF          = masasachetNP-masasachet
 
-
-
-
-
-
-
-#Se definen variables que se usarán en los ajustes
+#%%Se definen variables que se usarán en los ajustes
 
 contribución_lineal=np.zeros(len(nombre_archivo))
 
@@ -99,16 +62,15 @@ qq = []
 #Sesion con curva anhisterética sin señal diamagnética
 qq2 = []
 
-
-
-
 #Iniciamnos sesión de ajuste (aun no se ajusta) y graficamos curvas originales normalizadas
 
 for k in range(len(nombre_archivo)):
     #Se lee el archivo
     archivo=nombre_archivo[k]
-    data = np.loadtxt (archivo, skiprows=12);
-    campo = data[:,0]; momento = data[:,1]
+    data = np.loadtxt (archivo, skiprows=12)
+    campo = data[:,0]
+    momento = data[:,1]
+    
     #Normalizamos por masa de FF
     magnetizacion_FF=momento/masaFF[k] # /concentracion_MNP[k]*1000 #(emu/g)
            
@@ -121,7 +83,7 @@ for k in range(len(nombre_archivo)):
     qq.append(fit3.session (campo_anhist,magnetizacion_FF_anhist, fname='anhi'))
     q = qq[k]
     q.label=archivo
-
+ 
     #Gráficamos el ciclo antes de ajustar
     if k==0:
         plt.figure(111)
@@ -134,21 +96,16 @@ for k in range(len(nombre_archivo)):
         plt.clf()
        
     plt.figure(111)
-    plt.plot(campo, magnetizacion_FF,'ro',label=q.label,color=colores[k])
+    plt.plot(campo, magnetizacion_FF,'o',label=q.label,color=colores[k])
     plt.xlabel('Campo (Oe)')
     plt.ylabel('Magnetizacion (emu/g)')
     plt.title('Normalizado por masa de FF')
     plt.legend()
     plt.savefig('Ciclos_normalizados_por_masa_de_FF')
     plt.show()
-    
+      
+    # Se realizan los ajustes  
    
-    
-  
-    
-# Se realizan los ajustes  
-
-    
     # q = qq[k]
     # archivo=nombre_archivo[k]
     # q.label=archivo
@@ -177,7 +134,7 @@ for k in range(len(nombre_archivo)):
     plt.plot(campo_anhist, (magnetizacion_FF_anhist-q.params['C'].value*campo_anhist-q.params['dc'])/concentracion_MNP[k]*1000,'ro',label=q.label,color=colores[k])
     plt.xlabel('Campo (Oe)')
     plt.ylabel('Momento (emu/g)')
-    plt.title('Magnetización sin señal diamagnétcia normalizado por massa de MNP')
+    plt.title('Magnetización sin señal diamagnétcia normalizado por masa de MNP')
     plt.legend()
     plt.show()
     
@@ -189,7 +146,7 @@ for k in range(len(nombre_archivo)):
     plt.legend()
     plt.show()
     
-    
+    #%%
     print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
 
     derparam=q.print_pars(par='True')
@@ -364,3 +321,5 @@ plt.legend()
 
 
 
+
+# %%
