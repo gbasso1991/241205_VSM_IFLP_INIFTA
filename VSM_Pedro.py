@@ -22,7 +22,7 @@ os.chdir('/home/giuliano/Documentos/Doctorado/Datos_ESAR_24/241205_VSM_IFLP_INIF
 # concentracion_MNP    =[0.082, 0.4, 0.20, 0.36, 0.28, 0.22, 0.054, 0.17, 0.14, 0.030] #mg/ml
 # err_conentracion_MNP =[0.009, 0.1, 0.02, 0.05, 0.03, 0.04, 0.008, 0.06, 0.03, 0.005] #mg/ml
 colores = ['blue', 'green', 'red', 'black', 'magenta', 'orange', 'cyan', 'brown', 'purple', 'lime']
-
+#%%
 # Definir la clase Muestra
 class Muestra:
     def _init_(self, nombre_archivo, masa_sachet, masa_sachetNP, concentracion_MNP, err_concentracion_MNP):
@@ -84,6 +84,7 @@ for k in range(len(nombre_archivo)):
            
     #Armamos la curva anhisteretica
     a = mt.anhysteretic(campo,magnetizacion_FF)
+
     campo_anhist=a[0]
     magnetizacion_FF_anhist=a[1]
     

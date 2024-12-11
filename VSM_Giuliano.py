@@ -383,31 +383,73 @@ plt.show()
 
 
 
-#%%
-# class Muestra():
-#     def _init_(self, nombre_archivo, masa_sachet, masa_sachet_NP, concentracion_MNP, err_concentracion_MNP):
-#         self.nombre_archivo = nombre_archivo
-#         self.masa_sachet = masa_sachet
-#         self.masa_sachet_NP = masa_sachet_NP
-#         self.concentracion_MNP = concentracion_MNP
-#         self.err_concentracion_MNP = err_concentracion_MNP
+#%% Clase Muestra
+class Muestra():
+    'Archivo VSM'
+    def __init__(self, nombre_archivo, masa_sachet, masa_sachet_NP, concentracion_MNP, err_concentracion_MNP):
+        self.nombre_archivo = nombre_archivo
+        
+        
+        self.masa_sachet = masa_sachet
+        self.masa_sachet_NP = masa_sachet_NP
+        self.concentracion_MNP = concentracion_MNP
+        self.err_concentracion_MNP = err_concentracion_MNP
 
-# muestras = []
+muestras = []
 
-# # Agregar muestras manualmente (sin vectores previos)
-# muestras.append(Muestra('LB100_CP2.txt',0.0469,0.0961,1,0.01)) 
-# muestras.append(Muestra('LB100_FP.txt',0.0603, 0.1093,0.85,0.01))         
-# muestras.append(Muestra('LB100_OH.txt',0.0608,0.1123,1,0.01)) 
-# muestras.append(Muestra('LB100_P.txt',0.0574, 0.1040,0.79,0.01))           
+#%% Agregar muestras manualmente (sin vectores previos)
+muestras.append(Muestra('LB100_CP2.txt',0.0469,0.0961,1,0.01)) 
+muestras.append(Muestra('LB100_FP.txt',0.0603, 0.1093,0.85,0.01))         
+muestras.append(Muestra('LB100_OH.txt',0.0608,0.1123,1,0.01)) 
+muestras.append(Muestra('LB100_P.txt',0.0574, 0.1040,0.79,0.01))           
 
-# muestras.append(Muestra('LB97_CP2.txt',0.0642,0.1152,1,0.01)) 
-# muestras.append(Muestra('LB97_FP.txt',0.0645, 0.1062,0.85,0.01))         
-# muestras.append(Muestra('LB97_OH.txt',0.0684,0.1178,1,0.01)) 
-# muestras.append(Muestra('LB97_P.txt',0.0631, 0.1133,0.79,0.01))  
+muestras.append(Muestra('LB97_CP2.txt',0.0642,0.1152,1,0.01)) 
+muestras.append(Muestra('LB97_FP1.txt',0.0645, 0.1062,0.85,0.01))         
+muestras.append(Muestra('LB97_OH.txt',0.0684,0.1178,1,0.01)) 
+muestras.append(Muestra('LB97_P.txt',0.0631, 0.1133,0.79,0.01))  
 
-# nombre_archivo  = [muestra.nombre_archivo                 for muestra in muestras]
-# masa_sachet      = np.array([muestra.masa_sachet           for muestra in muestras])*1e-4
-# masa_sachet_NP    = np.array([muestra.masa_sachet_NP         for muestra in muestras])*1e-4
-# concentracion_MNP = np.array([muestra.concentracion_MNP   for muestra in muestras])
-# errores_concentracion         = np.array([muestra.err_concentracion_MNP for muestra in muestras])
-# masa_FF          = masa_sachet_NP-masa_sachet
+nombre_archivo  = [muestra.nombre_archivo for muestra in muestras]
+masa_sachet = np.array([muestra.masa_sachet for muestra in muestras])
+masa_sachet_NP = np.array([muestra.masa_sachet_NP for muestra in muestras])
+concentracion_MNP = np.array([muestra.concentracion_MNP for muestra in muestras])
+errores_concentracion = np.array([muestra.err_concentracion_MNP for muestra in muestras])
+masa_FF = masa_sachet_NP-masa_sachet
+
+sus_diamag=[]
+offset=[]
+ms_lin=[]
+magsat=[]
+magsat2=[]
+meanmu_mu=[]
+meanmu_mu2=[]
+mu0_fit2=[]
+sig0_fit2=[]
+# %
+#Iniciamnos sesión de ajuste (aun no se ajusta) y graficamos curvas originales normalizadas
+
+fit_sessions=[]
+for k in range(len(nombre_archivo)):
+    #Se lee el archivo
+    archivo=nombre_archivo[k]
+    data = np.loadtxt (archivo, skiprows=12)
+    (campo,momento) = (data[:,0],data[:,1])
+    
+    #Normalizamos por masa de FF
+    magnetizacion_FF=momento/masa_FF[k] # /concentracion_MNP[k]*1000 #(emu/g)
+           
+    #Armamos la curva anhisteretica
+    campo_anhist,magnetizacion_FF_anhist = mt.anhysteretic(campo,magnetizacion_FF)
+    
+    # #Se inicia la sesión de ajuste con la curva anhisterética
+    fit_sessions.append(fit3.session (campo_anhist,magnetizacion_FF_anhist, fname='anhi'))
+    fit_sessions[k].label=archivo
+
+    plt.plot(campo, magnetizacion_FF,'ro',label=fit_sessions[k].label)
+    plt.xlabel('Campo (G)')
+    plt.ylabel('Magnetizacion (emu/g)')
+    plt.title('Normalizado por masa de FF')
+    plt.legend()
+    plt.savefig('Ciclos_normalizados_por_masa_de_FF')
+    plt.show()
+
+# %%
