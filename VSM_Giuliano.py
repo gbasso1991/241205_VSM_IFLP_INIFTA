@@ -21,7 +21,7 @@ mass_sachet_A = 0.0469  # g
 mass_sachet_FF_A = 0.0961  # g
 mass_FF_A = mass_sachet_FF_A - mass_sachet_A  # g
 C_A = 1  # g/L = kg/m³
-
+#%%
 # LB100_FP
 LB100FP = np.loadtxt('LB100_FP.txt', skiprows=12)
 H_B = LB100FP[:, 0]  # Gauss
@@ -398,15 +398,15 @@ class Muestra():
 muestras = []
 
 #%% Agregar muestras manualmente (sin vectores previos)
-muestras.append(Muestra('LB100_CP2.txt',0.0469,0.0961,1,0.01)) 
-muestras.append(Muestra('LB100_FP.txt',0.0603, 0.1093,0.85,0.01))         
-muestras.append(Muestra('LB100_OH.txt',0.0608,0.1123,1,0.01)) 
-muestras.append(Muestra('LB100_P.txt',0.0574, 0.1040,0.79,0.01))           
+# muestras.append(Muestra('LB100_CP2.txt',0.0469,0.0961,1,0.01)) 
+# muestras.append(Muestra('LB100_FP.txt',0.0603, 0.1093,0.85,0.01))         
+# muestras.append(Muestra('LB100_OH.txt',0.0608,0.1123,1,0.01)) 
+# muestras.append(Muestra('LB100_P.txt',0.0574, 0.1040,0.79,0.01))           
 
 muestras.append(Muestra('LB97_CP2.txt',0.0642,0.1152,1,0.01)) 
 muestras.append(Muestra('LB97_FP1.txt',0.0645, 0.1062,0.85,0.01))         
-muestras.append(Muestra('LB97_OH.txt',0.0684,0.1178,1,0.01)) 
-muestras.append(Muestra('LB97_P.txt',0.0631, 0.1133,0.79,0.01))  
+# muestras.append(Muestra('LB97_OH.txt',0.0684,0.1178,1,0.01)) 
+# muestras.append(Muestra('LB97_P.txt',0.0631, 0.1133,0.79,0.01))  
 
 nombre_archivo  = [muestra.nombre_archivo for muestra in muestras]
 masa_sachet = np.array([muestra.masa_sachet for muestra in muestras])
@@ -418,9 +418,9 @@ masa_FF = masa_sachet_NP-masa_sachet
 sus_diamag=[]
 offset=[]
 ms_lin=[]
-magsat=[]
+mag_sat=[]
 magsat2=[]
-meanmu_mu=[]
+mean_mu_mu=[]
 meanmu_mu2=[]
 mu0_fit2=[]
 sig0_fit2=[]
@@ -442,14 +442,54 @@ for k in range(len(nombre_archivo)):
     
     # #Se inicia la sesión de ajuste con la curva anhisterética
     fit_sessions.append(fit3.session (campo_anhist,magnetizacion_FF_anhist, fname='anhi'))
-    fit_sessions[k].label=archivo
+    fit=fit_sessions[k]
+    fit.label=archivo[:-4]
 
-    plt.plot(campo, magnetizacion_FF,'ro',label=fit_sessions[k].label)
-    plt.xlabel('Campo (G)')
-    plt.ylabel('Magnetizacion (emu/g)')
-    plt.title('Normalizado por masa de FF')
+    # plt.plot(campo, magnetizacion_FF,'ro',label=fit_sessions[k].label)
+    # plt.xlabel('Campo (G)')
+    # plt.ylabel('Magnetizacion (emu/g)')
+    # plt.title('Normalizado por masa de FF')
+    # plt.legend()
+    # plt.savefig('Ciclos_normalizados_por_masa_de_FF')
+    # plt.show()
+    fit.fix('sig0')
+    fit.fix('mu0')
+    fit.free('dc')
+    fit.fit()
+    fit.update()
+    fit.free('sig0')
+    fit.free('mu0')
+    fit.set_yE_as('sep')
+    fit.fit()
+    fit.update()
+    fit.save()
+    fit.print_pars()
+
+    H_fit = fit.X
+    m_fit = fit.Y
+    m_sin_diamag = magnetizacion_FF_anhist - lineal(campo_anhist, fit.params['C'].value, fit.params['dc'].value)
+    m_sin_diamag_norm = m_sin_diamag/concentracion_MNP[k]*1000
+    
+    plt.figure(112)
+    plt.plot(campo_anhist,m_sin_diamag_norm,'o-',label=fit.label)
+    plt.xlabel('Campo (Oe)')
+    plt.ylabel('Momento (emu/g)')
+    plt.title('Magnetización sin señal diamagnétcia normalizado por masa de MNP')
     plt.legend()
-    plt.savefig('Ciclos_normalizados_por_masa_de_FF')
+    plt.show()
+    
+    plt.figure(114)
+    plt.plot(campo_anhist, (magnetizacion_FF_anhist-fit.params['C'].value*campo_anhist-fit.params['dc']),label=fit.label)
+    plt.xlabel('Campo (G)')
+    plt.ylabel('m (emu/g)')
+    plt.title('Magnetización sin señal diamagnética')
+    plt.legend()
     plt.show()
 
+#%%
+    param_deriv=fit.print_pars(ret=True)
+    #Se guarda Ms y <mu>
+    sus_diamag.append(fit.params['C'])
+    mag_sat.append(param_deriv[-1]/concentracion_MNP[k]*1000)
+    mean_mu_mu.append(param_deriv[2])
 # %%
